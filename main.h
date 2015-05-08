@@ -12,9 +12,27 @@
 #define BYTE_2 0xff00
 #define BYTE_3 0xff
 
-#define FORMAT (0xfffe)
-#define SUB_FORMAT (0x0001)
-#define BITRATE 192000
+#define WAV_CHUNK_ID "RIFF"
+#define WAV_CHUNK_SIZE_NO_DATA (4 + 48 + 12 + 8)
+#define WAV_WAVE_ID "WAVE"
+#define WAV_FMT_CHUNK_ID "fmt "
+#define WAV_CHUNK_SIZE 40
+#define WAV_FORMAT (0xFFFE)
+#define WAV_CHANNEL 1
+#define WAV_SAMPLE_PER_SECOND 192000
+#define WAV_BYTE_PER_SAMPLE 4
+#define WAV_BYTE_PER_SECOND (WAV_SAMPLE_PER_SECOND * WAV_BYTE_PER_SAMPLE * WAV_CHANNEL)
+#define WAV_BLOCK_ALIGN (WAV_BYTE_PER_SAMPLE * WAV_CHANNEL)
+#define WAV_BITS_PER_SAMPLE (8 * WAV_BYTE_PER_SAMPLE)
+#define WAV_EXTENSION_SIZE 22
+#define WAV_VALID_BIT_PER_SAMPLE WAV_BITS_PER_SAMPLE
+#define WAV_SPEAKER_POS_MASK (0x00000000)
+#define WAV_SUB_FORMAT (0x0001)
+#define WAV_GUID "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71"
+#define WAV_FACT_CHUNK_ID "fact"
+#define WAV_FACT_CHUNK_SIZE 4
+#define WAV_DATA_CHUNK_ID "data"
+
 
 
 
@@ -28,6 +46,7 @@ int WriteInt_16(FILE *file, int16_t data);//write data to file in little endian.
 int WriteInt_32(FILE *file, int32_t data);//write data to file in little endian. return 0 on success
 int WriteUInt_16(FILE *file, uint16_t data);//write data to file in little endian. return 0 on succuess
 int WriteUInt_32(FILE *file, uint32_t data);//write data to file in little endian. return 0 on success
+int WriteStr(FILE *file, char* str, uint32_t size);//write data to file. return 0 on success
 int WriteWav(FILE *file, int32_t *data, uint32_t size);//write wav file with data of size elements. return 0 on success
 
 
