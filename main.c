@@ -4,13 +4,33 @@
 int main(int argc, char *argv[]){
 	if (argc != 3){//if there was not correct number of argument
 		printf("Plese input file to compile and destination file");
-		exit(EXIT_SUCCESS);//exit software
+		exit(EXIT_SUCCESS);//exit program
 	}
 
+	Src = fopen(argv[1], "r");//open source file
+	if (Src == NULL){//if file could not be opened
+		printf("Source file %s could not be opened\n", argv[1]);//send error meaaage
+		exit(EXIT_SUCCESS);//exit program
+	}
 
+	Dest = fopen(argv[2], "w");//open destination file
+	if (Dest == NULL){//if file could not be opened
+		printf("Source file %s could not be opened\n", argv[2]);//send error meaaage
+		exit(EXIT_SUCCESS);//exit program
+	}
+	
+	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 10);//allocate memory for main data
+	
+	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND * 10, 2000, INT32_MAX, 0, 0);//add sign wave to main data
+	
+	//write sound file
+	if (WriteWav(Dest, MainData)){//if there was some error
+		printf("Could not write to file correctly\n");//send error message
+	}
 
+	FreeData(MainData);//free main data
 
-	exit(EXIT_SUCCESS);//exit software
+	exit(EXIT_SUCCESS);//exit program
 }
 
 int IntBigEndian(void){//get if integer is in big endian
@@ -74,10 +94,10 @@ int WriteStr(FILE *file, char* str, uint32_t size){//write data to file. return 
 	return 0;
 }
 
-int WriteWav(FILE *file, int32_t *data, uint32_t size){//write wav file with data of size elements. return 0 on success
+int WriteWav(FILE *file, Sound *data){//write wav file with data of size elements. return 0 on success
 	int error = 0;//number of error
 	error += WriteStr(file, WAV_CHUNK_ID, 4);//write each data
-	error += WriteUInt_32(file, WAV_CHUNK_SIZE_NO_DATA + size * WAV_BYTE_PER_SAMPLE * WAV_CHANNEL);
+	error += WriteUInt_32(file, WAV_CHUNK_SIZE_NO_DATA + data->DataSize * WAV_BYTE_PER_SAMPLE * WAV_CHANNEL);
 	error += WriteStr(file, WAV_WAVE_ID, 4);
 	error += WriteStr(file, WAV_FMT_CHUNK_ID, 4);
 	error += WriteUInt_32(file, WAV_CHUNK_SIZE);
@@ -94,12 +114,46 @@ int WriteWav(FILE *file, int32_t *data, uint32_t size){//write wav file with dat
 	error += WriteStr(file, WAV_GUID, 14);
 	error += WriteStr(file, WAV_FACT_CHUNK_ID, 4);
 	error += WriteUInt_32(file, WAV_FACT_CHUNK_SIZE);
-	error += WriteUInt_32(file, size * WAV_CHANNEL);
+	error += WriteUInt_32(file, data->DataSize * WAV_CHANNEL);
 	error += WriteStr(file, WAV_DATA_CHUNK_ID, 4);
-	error += WriteUInt_32(file, size * WAV_BYTE_PER_SAMPLE * WAV_CHANNEL);
+	error += WriteUInt_32(file, data->DataSize * WAV_BYTE_PER_SAMPLE * WAV_CHANNEL);
 	uint32_t i;
-	for (i = 0; i < size; i++){//for each data sample
-		error += WriteInt_32(file, data[i]);//write that data
+	for (i = 0; i < data->DataSize; i++){//for each data sample
+		error += WriteInt_32(file, data->Sound[i]);//write that data
 	}
 	return error;//return number of error
+}
+
+Sound *AllocateData(uint32_t size){//allocate memory for data with size elements
+	Sound *data;
+	data = malloc(sizeof(Sound));//allocate memory for data structure
+	data->Sound = calloc(size, WAV_BYTE_PER_SAMPLE * WAV_CHANNEL);//allocate memory for dound data
+	data->DataSize = size;//set data size
+	return data;
+}
+
+void FreeData(Sound *data){//free memory for data
+	free(data->Sound);//free data
+	free(data);//free data structure
+}
+
+void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift){//add specified sign wave to that portion of data
+	uint32_t i;
+	for (i = start; i <= end; i++){//for each in portion of data
+		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND)) + yshift;//get that sign wave
+	}
+}
+
+void AddData(Sound *dest, Sound *src, uint32_t start){//add src to dest at start
+	uint32_t i;
+	for (i = 0; i <= src->DataSize; i++){//for each of source
+		dest->Sound[i + start] += src->Sound[i];//add data
+	}
+}
+
+void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at start
+	uint32_t i;
+	for (i = start; i <= src->DataSize; i++){//for each of source
+		dest->Sound[i + start] = src->Sound[i];//copy data
+	}
 }
