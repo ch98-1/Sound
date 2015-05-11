@@ -13,7 +13,6 @@
 #define BYTE_2 0xff00
 #define BYTE_3 0xff
 
-#define INT32_MAX (int32_t) 0x7FFFFFFF //maximum integer value
 #define PI 3.141592653589793 //value of pi
 
 #define WAV_CHUNK_ID "RIFF"
