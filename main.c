@@ -21,7 +21,8 @@ int main(int argc, char *argv[]){
 	
 	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 10);//allocate memory for main data
 	
-	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND * 10, 200, INT32_MAX, 0, 0);//add sign wave to main data
+	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
+	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0, 1000);//add square wave to main data
 	
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
@@ -155,5 +156,17 @@ void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at sta
 	uint32_t i;
 	for (i = start; i <= src->DataSize; i++){//for each of source
 		dest->Sound[i + start] = src->Sound[i];//copy data
+	}
+}
+
+void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift, uint32_t iteration){//add specified square wave made from additive synthesis for iteration times to that portion of data
+	int32_t i;
+	for (i = start; i <= end; i++){//for each in portion of data
+		double DataPoint = 0;//data point for that data
+		int32_t j;
+		for (j = 0; j < iteration; j++){//for each iteration
+			DataPoint += sin(2.0 * (2.0 * j + 1) * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND) / (2.0 * j + 1);//get that sign wave
+		}
+		data->Sound[i] += (int32_t)(DataPoint * ampritude * 4 / PI) + yshift;//set data
 	}
 }

@@ -65,6 +65,7 @@ void FreeData(Sound *data);//free memory for data
 void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift);//add specified sign wave to that portion of data
 void AddData(Sound *dest, Sound *src, uint32_t start);//add src to dest at start
 void CopyData(Sound *dest, Sound *src, uint32_t start);//copy src to dest at start
+void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift, uint32_t iteration);//add specified square wave made from additive synthesis for iteration times to that portion of data
 
 
 
