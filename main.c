@@ -7,13 +7,13 @@ int main(int argc, char *argv[]){
 		exit(EXIT_SUCCESS);//exit program
 	}
 
-	Src = fopen(argv[1], "r");//open source file
+	Src = fopen(argv[1], "rb");//open source file
 	if (Src == NULL){//if file could not be opened
 		printf("Source file %s could not be opened\n", argv[1]);//send error meaaage
 		exit(EXIT_SUCCESS);//exit program
 	}
 
-	Dest = fopen(argv[2], "w");//open destination file
+	Dest = fopen(argv[2], "wb");//open destination file
 	if (Dest == NULL){//if file could not be opened
 		printf("Source file %s could not be opened\n", argv[2]);//send error meaaage
 		exit(EXIT_SUCCESS);//exit program
