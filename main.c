@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 	
 	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 10);//allocate memory for main data
 	
-	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND * 10, 2000, INT32_MAX, 0, 0);//add sign wave to main data
+	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND * 10, 200, INT32_MAX, 0, 0);//add sign wave to main data
 	
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
@@ -138,7 +138,7 @@ void FreeData(Sound *data){//free memory for data
 }
 
 void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift){//add specified sign wave to that portion of data
-	uint32_t i;
+	int32_t i;
 	for (i = start; i <= end; i++){//for each in portion of data
 		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND)) + yshift;//get that sign wave
 	}
