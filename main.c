@@ -19,10 +19,13 @@ int main(int argc, char *argv[]){
 		exit(EXIT_SUCCESS);//exit program
 	}
 	
-	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 10);//allocate memory for main data
+	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 5 + 1);//allocate memory for main data
 	
 	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
-	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0, 1000);//add square wave to main data
+	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
+	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
+	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 0, 0);//add reverse-sawtooth wave to main data
+	TriangleWave(MainData, WAV_SAMPLE_PER_SECOND * 4, WAV_SAMPLE_PER_SECOND * 5, 200, INT32_MAX * 0.9, 0, 0);//add traiangle wave to main data
 	
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
@@ -138,9 +141,9 @@ void FreeData(Sound *data){//free memory for data
 	free(data);//free data structure
 }
 
-void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift){//add specified sign wave to that portion of data
+void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified sign wave to that portion of data
 	int32_t i;
-	for (i = start; i <= end; i++){//for each in portion of data
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
 		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND)) + yshift;//get that sign wave
 	}
 }
@@ -159,14 +162,30 @@ void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at sta
 	}
 }
 
-void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift, uint32_t iteration){//add specified square wave made from additive synthesis for iteration times to that portion of data
+void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified square wave to that portion of data
 	int32_t i;
-	for (i = start; i <= end; i++){//for each in portion of data
-		double DataPoint = 0;//data point for that data
-		int32_t j;
-		for (j = 0; j < iteration; j++){//for each iteration
-			DataPoint += sin(2.0 * (2.0 * j + 1) * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND) / (2.0 * j + 1);//get that sign wave
-		}
-		data->Sound[i] += (int32_t)(DataPoint * ampritude * 4 / PI) + yshift;//set data
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		data->Sound[i] += (int32_t)(fmod((i - xshift), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? ampritude : -ampritude) + yshift;//set data
+	}
+}
+
+void SawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified sawtooth wave to that portion of data
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2), (WAV_SAMPLE_PER_SECOND / hz)) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) - ampritude) + yshift;//set data
+	}
+}
+
+void ReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified reverse-sawtooth wave to that portion of data
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2), (WAV_SAMPLE_PER_SECOND / hz)) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) + ampritude) + yshift;//set data
+	}
+}
+
+void TriangleWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified triangle wave to that portion of data
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		data->Sound[i] += (int32_t)(fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) - ampritude : fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) + ampritude) + yshift;//set data
 	}
 }

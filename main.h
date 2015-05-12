@@ -62,11 +62,13 @@ int WriteStr(FILE *file, char* str, uint32_t size);//write data to file. return 
 int WriteWav(FILE *file, Sound *data);//write wav file with data of size elements. return 0 on success
 Sound *AllocateData(uint32_t size);//allocate memory for data with size elements
 void FreeData(Sound *data);//free memory for data
-void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift);//add specified sign wave to that portion of data
+void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified sign wave to that portion of data
 void AddData(Sound *dest, Sound *src, uint32_t start);//add src to dest at start
 void CopyData(Sound *dest, Sound *src, uint32_t start);//copy src to dest at start
-void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, uint32_t ampritude, int32_t xshift, int32_t yshift, uint32_t iteration);//add specified square wave made from additive synthesis for iteration times to that portion of data
-
+void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified square wave to that portion of data
+void SawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified sawtooth wave to that portion of data
+void ReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified reverse-sawtooth wave to that portion of data
+void TriangleWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified triangle wave to that portion of data
 
 
 #endif
