@@ -21,18 +21,23 @@ int main(int argc, char *argv[]){
 	
 	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 5 + 1);//allocate memory for main data
 	
-	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
+	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, WAV_SAMPLE_PER_SECOND / 200 / 2, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
 	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
-	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 0, 0);//add reverse-sawtooth wave to main data
+	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 1000, 0);//add reverse-sawtooth wave to main data
 	TriangleWave(MainData, WAV_SAMPLE_PER_SECOND * 4, WAV_SAMPLE_PER_SECOND * 5, 200, INT32_MAX * 0.9, 0, 0);//add traiangle wave to main data
+	Cutoff(MainData, INT32_MAX * -0.2, INT32_MAX);//cutoff the bottom
+	YShift(MainData, INT32_MAX * -0.3);//shift to center
+	Smooth(MainData, -0, 100);//smooth wave
+	Smooth(MainData, -0, 200);//double smooth wave
+	Amplify(MainData, 1.6);//amplify data
 	
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
 		printf("Could not write to file correctly\n");//send error message
 	}
 
-	FreeData(MainData);//free main data
+	//FreeData(MainData);//free main data
 
 	exit(EXIT_SUCCESS);//exit program
 }
@@ -157,7 +162,7 @@ void AddData(Sound *dest, Sound *src, uint32_t start){//add src to dest at start
 
 void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at start
 	uint32_t i;
-	for (i = start; i <= src->DataSize; i++){//for each of source
+	for (i = 0; i <= src->DataSize; i++){//for each of source
 		dest->Sound[i + start] = src->Sound[i];//copy data
 	}
 }
@@ -187,5 +192,41 @@ void TriangleWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t 
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
 		data->Sound[i] += (int32_t)(fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) - ampritude : fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) + ampritude) + yshift;//set data
+	}
+}
+
+void Smooth(Sound *data, int32_t start, int32_t end){//smooth wave by taking avarage from start to end
+	int32_t i;
+	Sound *copy = AllocateData(data->DataSize);//allocate memory for copy of data
+	CopyData(copy, data, 0);//copy that data
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		double sum = 0;
+		int32_t j;
+		for (j = start; j <= end; j++){
+			sum += copy->Sound[(i + j) < 0 ? 0 : (i + j) > (int32_t)data->DataSize ? data->DataSize : (i + j)];//get data
+		}
+		data->Sound[i] = (int32_t)(sum / (end - start));//get avarage
+	}
+	FreeData(copy);
+}
+
+void Cutoff(Sound *data, int32_t min, int32_t max){//cutoff the wave at min and max
+	int32_t i;
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		data->Sound[i] = (int32_t)(data->Sound[i] < min ? min : data->Sound[i] > max ? max : data->Sound[i]);//set data
+	}
+}
+
+void Amplify(Sound *data, double vol){//amplify sound by volume
+	int32_t i;
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		data->Sound[i] = (int32_t)(data->Sound[i] * vol);//amplify data
+	}
+}
+
+void YShift(Sound *data, int32_t yshift){//shift wave in y direction
+	int32_t i;
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		data->Sound[i] = (int32_t)(data->Sound[i] + yshift);//shift data
 	}
 }

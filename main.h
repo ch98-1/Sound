@@ -69,6 +69,10 @@ void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t am
 void SawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified sawtooth wave to that portion of data
 void ReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified reverse-sawtooth wave to that portion of data
 void TriangleWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift);//add specified triangle wave to that portion of data
+void Smooth(Sound *data, int32_t start, int32_t end);//smooth wave by taking avarage from start to end
+void Cutoff(Sound *data, int32_t min, int32_t max);//cutoff the wave at min and max
+void Amplify(Sound *data, double vol);//amplify sound by volume
+void YShift(Sound *data, int32_t yshift);//shift wave in y direction
 
 
 #endif
