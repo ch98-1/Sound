@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 	
 	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 5 + 1);//allocate memory for main data
 	
-	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, WAV_SAMPLE_PER_SECOND / 200 / 2, 0);//add sign wave to main data
+	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
 	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
 	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 0, 0);//add reverse-sawtooth wave to main data
