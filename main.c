@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, WAV_SAMPLE_PER_SECOND / 200 / 2, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
 	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
-	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 1000, 0);//add reverse-sawtooth wave to main data
+	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 0, 0);//add reverse-sawtooth wave to main data
 	TriangleWave(MainData, WAV_SAMPLE_PER_SECOND * 4, WAV_SAMPLE_PER_SECOND * 5, 200, INT32_MAX * 0.9, 0, 0);//add traiangle wave to main data
 	Cutoff(MainData, INT32_MAX * -0.2, INT32_MAX);//cutoff the bottom
 	YShift(MainData, INT32_MAX * -0.3);//shift to center
@@ -149,7 +149,7 @@ void FreeData(Sound *data){//free memory for data
 void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified sign wave to that portion of data
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
-		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND)) + yshift;//get that sign wave
+		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND) + WAV_SAMPLE_PER_SECOND / hz) + yshift;//get that sign wave
 	}
 }
 
@@ -170,28 +170,28 @@ void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at sta
 void SquareWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified square wave to that portion of data
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
-		data->Sound[i] += (int32_t)(fmod((i - xshift), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? ampritude : -ampritude) + yshift;//set data
+		data->Sound[i] += (int32_t)(fmod((i - xshift), (WAV_SAMPLE_PER_SECOND / hz) + WAV_SAMPLE_PER_SECOND / hz) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? ampritude : -ampritude) + yshift;//set data
 	}
 }
 
 void SawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified sawtooth wave to that portion of data
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
-		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2), (WAV_SAMPLE_PER_SECOND / hz)) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) - ampritude) + yshift;//set data
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) - ampritude) + yshift;//set data
 	}
 }
 
 void ReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified reverse-sawtooth wave to that portion of data
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
-		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2), (WAV_SAMPLE_PER_SECOND / hz)) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) + ampritude) + yshift;//set data
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) + ampritude) + yshift;//set data
 	}
 }
 
 void TriangleWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampritude, int32_t xshift, int32_t yshift){//add specified triangle wave to that portion of data
 	int32_t i;
 	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
-		data->Sound[i] += (int32_t)(fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) - ampritude : fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) + ampritude) + yshift;//set data
+		data->Sound[i] += (int32_t)(fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) - ampritude : fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) + ampritude) + yshift;//set data
 	}
 }
 
