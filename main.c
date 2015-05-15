@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
 	Sound *yshift = AllocateData(1);//yshift for sound
 	YShift(yshift, INT32_MAX * 0.5);//set last shift back
 	Sound *hz = AllocateData(1);//hz for sound
-	YShift(hz, 800 * 1000);//set it to 90% of max
+	YShift(hz, 800 * 1000);//set it to 90% of max 
 	FluctuatingSineWave(MainData, WAV_SAMPLE_PER_SECOND * 5, WAV_SAMPLE_PER_SECOND * 6, hz, sawtooth, blank, yshift);//add sign wave to main data
 	
 
@@ -331,4 +331,17 @@ void FluctuatingAmplify(Sound *data, Sound *Vol){//amplify sound by volume with 
 		double vol = (double)Vol->Sound[i % Vol->DataSize] / (INT32_MAX / 2);//get volume data
 		data->Sound[i] = (int32_t)(data->Sound[i] * vol);//amplify data
 	}
+}
+
+void GlottalFlowWave(Sound *data, double hz, int32_t ampritude){//simulate glottal flow. ampritude will be lower
+	SawtoothWave(data, 0, data->DataSize - 1, hz, ampritude, 0, 0);//add swatooth wave to main data
+	Cutoff(data, 0, INT32_MAX);//cutoff the bottom
+	YShift(data, (int32_t)(-ampritude / 2));//shift to center
+	Amplify(data, 2);//amplify data
+	Smooth(data, 0, (int32_t)(hz / 2));//smooth wave
+	Smooth(data, 0, (int32_t)(hz));//double smooth wave
+}
+
+void PianoWave(Sound *data, double hz, int32_t ampritude){//simulate piano. ampritude will be lower
+
 }
