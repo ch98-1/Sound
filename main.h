@@ -81,7 +81,7 @@ void FluctuatingTriangleWave(Sound *data, uint32_t start, uint32_t end, Sound *H
 void FluctuatingSmooth(Sound *data, Sound *Start, Sound *End);//smooth wave by taking avarage from start to end
 void FluctuatingCutoff(Sound *data, Sound *Min, Sound *Max);//cutoff the wave at min and max
 void FluctuatingAmplify(Sound *data, Sound *Vol);//amplify sound by volume with INT32_MAX as 2
-void GlottalFlowWave(Sound *data, double hz, int32_t ampritude);//simulate glottal flow. ampritude will be lower
+void GlottalFlowWave(Sound *data, double hz, int32_t ampritude, double smooth, int32_t cutoff);//simulate glottal flow. ampritude will be lower
 void PianoWave(Sound *data, double hz, int32_t ampritude);//simulate piano. ampritude will be lower
 
 

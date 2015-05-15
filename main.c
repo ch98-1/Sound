@@ -44,7 +44,6 @@ int main(int argc, char *argv[]){
 	
 
 
-
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
 		printf("Could not write to file correctly\n");//send error message
@@ -333,13 +332,13 @@ void FluctuatingAmplify(Sound *data, Sound *Vol){//amplify sound by volume with 
 	}
 }
 
-void GlottalFlowWave(Sound *data, double hz, int32_t ampritude){//simulate glottal flow. ampritude will be lower
+void GlottalFlowWave(Sound *data, double hz, int32_t ampritude, double smooth, int32_t cutoff){//simulate glottal flow. ampritude will be lower
 	SawtoothWave(data, 0, data->DataSize - 1, hz, ampritude, 0, 0);//add swatooth wave to main data
-	Cutoff(data, 0, INT32_MAX);//cutoff the bottom
-	YShift(data, (int32_t)(-ampritude / 2));//shift to center
+	Cutoff(data, cutoff, INT32_MAX);//cutoff the bottom
+	YShift(data, (int32_t)((-ampritude + cutoff) / 2));//shift to center
 	Amplify(data, 2);//amplify data
-	Smooth(data, 0, (int32_t)(hz / 2));//smooth wave
-	Smooth(data, 0, (int32_t)(hz));//double smooth wave
+	Smooth(data, 0, (int32_t)((WAV_SAMPLE_PER_SECOND / hz) * smooth));//smooth wave
+	Smooth(data, 0, (int32_t)((WAV_SAMPLE_PER_SECOND / hz) * smooth));//double smooth wave
 }
 
 void PianoWave(Sound *data, double hz, int32_t ampritude){//simulate piano. ampritude will be lower
