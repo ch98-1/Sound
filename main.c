@@ -19,8 +19,10 @@ int main(int argc, char *argv[]){
 		exit(EXIT_SUCCESS);//exit program
 	}
 	
-	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 5 + 1);//allocate memory for main data
+	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 6 + 1);//allocate memory for main data
 	
+
+	//Test functions
 	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
 	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
@@ -31,7 +33,18 @@ int main(int argc, char *argv[]){
 	Smooth(MainData, -0, 100);//smooth wave
 	Smooth(MainData, -0, 200);//double smooth wave
 	Amplify(MainData, 1.6);//amplify data
+	Sound *sawtooth = AllocateData(WAV_SAMPLE_PER_SECOND * 6 + 1);//sawtooth wave
+	SineWave(sawtooth, WAV_SAMPLE_PER_SECOND * 5, WAV_SAMPLE_PER_SECOND * 6, 50, INT32_MAX * 0.9, 0, 0);//get sawtooth wave
+	Sound *blank = AllocateData(1);//blank sound
+	Sound *yshift = AllocateData(1);//yshift for sound
+	YShift(yshift, INT32_MAX * 0.5);//set last shift back
+	Sound *hz = AllocateData(1);//hz for sound
+	YShift(hz, 800 * 1000);//set it to 90% of max
+	FluctuatingSineWave(MainData, WAV_SAMPLE_PER_SECOND * 5, WAV_SAMPLE_PER_SECOND * 6, hz, sawtooth, blank, yshift);//add sign wave to main data
 	
+
+
+
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
 		printf("Could not write to file correctly\n");//send error message
@@ -228,5 +241,94 @@ void YShift(Sound *data, int32_t yshift){//shift wave in y direction
 	int32_t i;
 	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
 		data->Sound[i] = (int32_t)(data->Sound[i] + yshift);//shift data
+	}
+}
+
+void FluctuatingSineWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift){//add specified sign wave to that portion of data with each increment as 1/1000 hz
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		double hz = (double)Hz->Sound[i % Hz->DataSize] / 1000;//get hz, ampritude, xshift, and yshift
+		int32_t ampritude = Ampritude->Sound[i % Ampritude->DataSize];
+		int32_t xshift = Xshift->Sound[i % Xshift->DataSize];
+		int32_t yshift = Yshift->Sound[i % Yshift->DataSize];
+		data->Sound[i] += (int32_t)(ampritude * sin(2.0 * PI * hz * (i - xshift) / WAV_SAMPLE_PER_SECOND) + WAV_SAMPLE_PER_SECOND / hz) + yshift;//get that sign wave
+	}
+}
+	
+void FluctuatingSquareWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift){//add specified square wave to that portion of data with each increment as 1/1000 hz
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		double hz = (double)Hz->Sound[i % Hz->DataSize] / 1000;//get hz, ampritude, xshift, and yshift
+		int32_t ampritude = Ampritude->Sound[i % Ampritude->DataSize];
+		int32_t xshift = Xshift->Sound[i % Xshift->DataSize];
+		int32_t yshift = Yshift->Sound[i % Yshift->DataSize];
+		data->Sound[i] += (int32_t)(fmod((i - xshift), (WAV_SAMPLE_PER_SECOND / hz) + WAV_SAMPLE_PER_SECOND / hz) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? ampritude : -ampritude) + yshift;//set data
+	}
+}
+	
+void FluctuatingSawtoothWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift){//add specified sawtooth wave to that portion of data with each increment as 1/1000 hz
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		double hz = (double)Hz->Sound[i % Hz->DataSize] / 1000;//get hz, ampritude, xshift, and yshift
+		int32_t ampritude = Ampritude->Sound[i % Ampritude->DataSize];
+		int32_t xshift = Xshift->Sound[i % Xshift->DataSize];
+		int32_t yshift = Yshift->Sound[i % Yshift->DataSize];
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) - ampritude) + yshift;//set data
+	}
+}
+	
+void FluctuatingReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift){//add specified reverse-sawtooth wave to that portion of data with each increment as 1/1000 hz
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		double hz = (double)Hz->Sound[i % Hz->DataSize] / 1000;//get hz, ampritude, xshift, and yshift
+		int32_t ampritude = Ampritude->Sound[i % Ampritude->DataSize];
+		int32_t xshift = Xshift->Sound[i % Xshift->DataSize];
+		int32_t yshift = Yshift->Sound[i % Yshift->DataSize];
+		data->Sound[i] += (int32_t)(fmod((i - xshift - (WAV_SAMPLE_PER_SECOND / hz) / 2 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / hz)) + ampritude) + yshift;//set data
+	}
+}
+		
+void FluctuatingTriangleWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift){//add specified triangle wave to that portion of data with each increment as 1/1000 hz
+	int32_t i;
+	for (i = start; (uint32_t)i <= end; i++){//for each in portion of data
+		double hz = (double) Hz->Sound[i % Hz->DataSize] / 1000;//get hz, ampritude, xshift, and yshift
+		int32_t ampritude = Ampritude->Sound[i % Ampritude->DataSize];
+		int32_t xshift = Xshift->Sound[i % Xshift->DataSize];
+		int32_t yshift = Yshift->Sound[i % Yshift->DataSize];
+		data->Sound[i] += (int32_t)(fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4 + WAV_SAMPLE_PER_SECOND / hz), (WAV_SAMPLE_PER_SECOND / hz)) < (WAV_SAMPLE_PER_SECOND / hz) / 2 ? fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * 2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) - ampritude : fmod((i - xshift + (WAV_SAMPLE_PER_SECOND / hz) / 4), (WAV_SAMPLE_PER_SECOND / (hz * 2))) * -2.0 * (ampritude / (WAV_SAMPLE_PER_SECOND / (hz * 2))) + ampritude) + yshift;//set data
+	}
+}
+			
+void FluctuatingSmooth(Sound *data, Sound *Start, Sound *End){//smooth wave by taking avarage from start to end
+	int32_t i;
+	Sound *copy = AllocateData(data->DataSize);//allocate memory for copy of data
+	CopyData(copy, data, 0);//copy that data
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		int32_t start = Start->Sound[i % Start->DataSize];//get start and end data
+		int32_t end = End->Sound[i % End->DataSize];
+		double sum = 0;
+		int32_t j;
+		for (j = start; j <= end; j++){
+			sum += copy->Sound[(i + j) < 0 ? 0 : (i + j) > (int32_t)data->DataSize ? data->DataSize : (i + j)];//get data
+		}
+		data->Sound[i] = (int32_t)(sum / (end - start));//get avarage
+	}
+	FreeData(copy);
+}
+				
+void FluctuatingCutoff(Sound *data, Sound *Min, Sound *Max){//cutoff the wave at min and max
+	int32_t i;
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		int32_t min = Min->Sound[i % Min->DataSize];//get min and max data
+		int32_t max = Max->Sound[i % Max->DataSize];
+		data->Sound[i] = (int32_t)(data->Sound[i] < min ? min : data->Sound[i] > max ? max : data->Sound[i]);//set data
+	}
+}
+					
+void FluctuatingAmplify(Sound *data, Sound *Vol){//amplify sound by volume with INT32_MAX as 2
+	int32_t i;
+	for (i = 0; (uint32_t)i < data->DataSize; i++){//for each in portion of data
+		double vol = (double)Vol->Sound[i % Vol->DataSize] / (INT32_MAX / 2);//get volume data
+		data->Sound[i] = (int32_t)(data->Sound[i] * vol);//amplify data
 	}
 }

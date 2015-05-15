@@ -73,6 +73,16 @@ void Smooth(Sound *data, int32_t start, int32_t end);//smooth wave by taking ava
 void Cutoff(Sound *data, int32_t min, int32_t max);//cutoff the wave at min and max
 void Amplify(Sound *data, double vol);//amplify sound by volume
 void YShift(Sound *data, int32_t yshift);//shift wave in y direction
+void FluctuatingSineWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift);//add specified sign wave to that portion of data with each increment as 1/1000 hz
+void FluctuatingSquareWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift);//add specified square wave to that portion of data with each increment as 1/1000 hz
+void FluctuatingSawtoothWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift);//add specified sawtooth wave to that portion of data with each increment as 1/1000 hz
+void FluctuatingReverseSawtoothWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift);//add specified reverse-sawtooth wave to that portion of data with each increment as 1/1000 hz
+void FluctuatingTriangleWave(Sound *data, uint32_t start, uint32_t end, Sound *Hz, Sound *Ampritude, Sound *Xshift, Sound *Yshift);//add specified triangle wave to that portion of data with each increment as 1/1000 hz
+void FluctuatingSmooth(Sound *data, Sound *Start, Sound *End);//smooth wave by taking avarage from start to end
+void FluctuatingCutoff(Sound *data, Sound *Min, Sound *Max);//cutoff the wave at min and max
+void FluctuatingAmplify(Sound *data, Sound *Vol);//amplify sound by volume with INT32_MAX as 2
+
+
 
 
 #endif
