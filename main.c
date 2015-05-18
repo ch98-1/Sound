@@ -2,16 +2,20 @@
 #include "main.h"
 
 int main(int argc, char *argv[]){
+	SetError(exit_failure);//set function to run in error
+
 	if (argc != 3){//if there was not correct number of argument
 		printf("Plese input file to compile and destination file");
 		exit(EXIT_SUCCESS);//exit program
 	}
 
-	Src = fopen(argv[1], "rb");//open source file
-	if (Src == NULL){//if file could not be opened
+	SrcFile = fopen(argv[1], "rb");//open source file
+	if (SrcFile == NULL){//if file could not be opened
 		printf("Source file %s could not be opened\n", argv[1]);//send error meaaage
 		exit(EXIT_SUCCESS);//exit program
 	}
+
+	LoadSource(SrcFile, SrcData);//load source files
 
 	Dest = fopen(argv[2], "wb");//open destination file
 	if (Dest == NULL){//if file could not be opened
@@ -343,4 +347,48 @@ void GlottalFlowWave(Sound *data, double hz, int32_t ampritude, double smooth, i
 
 void PianoWave(Sound *data, double hz, int32_t ampritude){//simulate piano. ampritude will be lower
 
+}
+
+void LoadSource(FILE *file, Source *source){//load source file in to data
+	source = malloc(sizeof(Source));//allocate source
+	source->length = 0;//initialise length
+	source->lines = NULL;//initialise lines pointer
+	int data;//data to read
+	while (1){//for each line
+		source->lines = realloc(source->lines, ++(source->length) * sizeof(Line));//allocate memory for each new line
+		source->lines[source->length - 1].length = 0;//initialise length
+		source->lines[source->length - 1].line = NULL;//initialise line pointer
+		while (1){//for each character
+			data = fgetc(file);//get character
+			source->lines[source->length - 1].line = realloc(source->lines[source->length - 1].line, ++(source->lines[source->length - 1].length));//allocate memory for each new character
+			if (data == EOF){//escape if at end of file
+				source->lines[source->length - 1].line[source->lines[source->length - 1].length - 1] = '\0';//end line
+				return;//end function
+			}
+			else{
+				if (data == ';'){//if data is at end of line
+					source->lines[source->length - 1].line[source->lines[source->length - 1].length - 1] = '\0';//end line
+					break;//get out of loop
+				}
+				else{
+					source->lines[source->length - 1].line[source->lines[source->length - 1].length - 1] = (char)data;//get character
+				}
+			}
+		}
+	}
+}
+
+char *GetLine(Source *source, uint32_t line){//get line of that line number
+	if (line < source->length){//check for out of bound
+		return source->lines[line].line;//return that line
+	}
+	return NULL;//return null if out of bound
+}
+
+uint32_t GetNumLines(Source *source){//get number of lines in the source
+	return source->length;//return length
+}
+
+void exit_failure(void){//exit program
+	exit(EXIT_FAILURE);//exit program
 }

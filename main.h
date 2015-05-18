@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#include "corwins.h"
 
 #define BYTE_0 0xff000000//bitmask for each byte
 #define BYTE_1 0xff0000
@@ -37,8 +38,22 @@
 #define WAV_DATA_CHUNK_ID "data"
 
 
-FILE *Src;//source file
+FILE *SrcFile;//source file
 FILE *Dest;//destination file
+
+
+
+typedef struct line{//line structure
+	char *line;//line data
+	uint32_t length;//length of line
+}Line;
+
+typedef struct source{//source file structure
+	Line *lines;//array of lines
+	uint32_t length;//length of line
+}Source;
+
+Source *SrcData;//source file data
 
 
 typedef struct sound{//data structure
@@ -52,7 +67,7 @@ Sound *MainData;//main sound data
 
 
 
-
+void exit_failure(void);//exit program
 int IntBigEndian(void);//get if integer is in big endian
 int WriteInt_16(FILE *file, int16_t data);//write data to file in little endian. return 0 on succuess
 int WriteInt_32(FILE *file, int32_t data);//write data to file in little endian. return 0 on success
@@ -83,6 +98,9 @@ void FluctuatingCutoff(Sound *data, Sound *Min, Sound *Max);//cutoff the wave at
 void FluctuatingAmplify(Sound *data, Sound *Vol);//amplify sound by volume with INT32_MAX as 2
 void GlottalFlowWave(Sound *data, double hz, int32_t ampritude, double smooth, int32_t cutoff);//simulate glottal flow. ampritude will be lower
 void PianoWave(Sound *data, double hz, int32_t ampritude);//simulate piano. ampritude will be lower
+void LoadSource(FILE *file, Source *source);//load source file in to data
+char *GetLine(Source *source, uint32_t line);//get line of that line number
+uint32_t GetNumLines(Source *source);//get number of lines in the source
 
 
 
