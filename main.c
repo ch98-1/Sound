@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 		exit(EXIT_SUCCESS);//exit program
 	}
 
-	LoadSource(SrcFile, SrcData);//load source files
+	SrcData = LoadSource(SrcFile, SrcData);//load source files
 
 	Dest = fopen(argv[2], "wb");//open destination file
 	if (Dest == NULL){//if file could not be opened
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 	
 	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 6 + 1);//allocate memory for main data
 	
-
+	
 	//Test functions
 	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
@@ -45,8 +45,6 @@ int main(int argc, char *argv[]){
 	Sound *hz = AllocateData(1);//hz for sound
 	YShift(hz, 800 * 1000);//set it to 90% of max 
 	FluctuatingSineWave(MainData, WAV_SAMPLE_PER_SECOND * 5, WAV_SAMPLE_PER_SECOND * 6, hz, sawtooth, blank, yshift);//add sign wave to main data
-	
-
 
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
@@ -349,7 +347,7 @@ void PianoWave(Sound *data, double hz, int32_t ampritude){//simulate piano. ampr
 
 }
 
-void LoadSource(FILE *file, Source *source){//load source file in to data
+Source *LoadSource(FILE *file, Source *source){//load source file in to data
 	source = malloc(sizeof(Source));//allocate source
 	source->length = 0;//initialise length
 	source->lines = NULL;//initialise lines pointer
@@ -363,7 +361,7 @@ void LoadSource(FILE *file, Source *source){//load source file in to data
 			source->lines[source->length - 1].line = realloc(source->lines[source->length - 1].line, ++(source->lines[source->length - 1].length));//allocate memory for each new character
 			if (data == EOF){//escape if at end of file
 				source->lines[source->length - 1].line[source->lines[source->length - 1].length - 1] = '\0';//end line
-				return;//end function
+				return source;//end function
 			}
 			else{
 				if (data == ';'){//if data is at end of line
@@ -376,6 +374,7 @@ void LoadSource(FILE *file, Source *source){//load source file in to data
 			}
 		}
 	}
+	return source;//return result
 }
 
 char *GetLine(Source *source, uint32_t line){//get line of that line number
