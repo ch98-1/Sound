@@ -51,7 +51,8 @@ int main(int argc, char *argv[]){
 		printf("Could not write to file correctly\n");//send error message
 	}
 
-	//FreeData(MainData);//free main data
+	FreeData(MainData);//free main data
+	FreeSource(SrcData);//free source data
 
 	exit(EXIT_SUCCESS);//exit program
 }
@@ -343,10 +344,6 @@ void GlottalFlowWave(Sound *data, double hz, int32_t ampritude, double smooth, i
 	Smooth(data, 0, (int32_t)((WAV_SAMPLE_PER_SECOND / hz) * smooth));//double smooth wave
 }
 
-void PianoWave(Sound *data, double hz, int32_t ampritude){//simulate piano. ampritude will be lower
-
-}
-
 Source *LoadSource(FILE *file, Source *source){//load source file in to data
 	source = malloc(sizeof(Source));//allocate source
 	source->length = 0;//initialise length
@@ -390,4 +387,13 @@ uint32_t GetNumLines(Source *source){//get number of lines in the source
 
 void exit_failure(void){//exit program
 	exit(EXIT_FAILURE);//exit program
+}
+
+void FreeSource(Source *source){//free memory for source
+	uint32_t i = 0;
+	for (i = 0; i < GetNumLines(source); i++){//for each line
+		free(source->lines[i].line);//free line
+	}
+	free(source->lines);//free lines array
+	free(source);//free source data
 }
