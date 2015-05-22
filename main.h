@@ -101,6 +101,7 @@ Source *LoadSource(FILE *file, Source *source);//load source file in to data
 char *GetLine(Source *source, uint32_t line);//get line of that line number
 uint32_t GetNumLines(Source *source);//get number of lines in the source
 void FreeSource(Source *source);//free memory for source
+double GetHertz(double key);//get Hz from piano key number for A440
 
 
 

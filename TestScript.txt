@@ -1,0 +1,8 @@
+( 7 / 60 );
+(0/60) (1/60) sine (200/1) (9/10) (0/1);
+(1/60) (1/60) sineDown (200/1) (9/10) (0/1);
+SOUND sineDown;
+(0/1) (length/1) sine (note/1) (amp/1) (add/1);
+Famplify;
+(0/1) (length/1) reverse (note/0.5) (amp/1) (add/1);
+EOS;

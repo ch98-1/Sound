@@ -22,9 +22,31 @@ int main(int argc, char *argv[]){
 		printf("Source file %s could not be opened\n", argv[2]);//send error meaaage
 		exit(EXIT_SUCCESS);//exit program
 	}
-	
-	MainData = AllocateData(WAV_SAMPLE_PER_SECOND * 6 + 1);//allocate memory for main data
-	
+
+	if (GetNumLines(SrcData) <= 0){//if there was no lines in the file
+		exit(EXIT_SUCCESS);//exit program
+	}
+
+	char line[2048] = { 0 };//line of the file
+	strcpy(line, GetLine(SrcData, 0));//copy line
+
+	MainData = AllocateData((uint32_t)((atof(strtok(line, "/() \t\n")) / atof(strtok(NULL, "/() \t\n"))) * 60.0 * WAV_SAMPLE_PER_SECOND));//allocate memory for main data according to length represented as a fraction
+	//All number is represented in a fraction of decimal in parentheses (ex. (1/0.5) is 2)
+	//Start of file has number in minuts of the length of the end result
+	//note is represented by normal number for hertz or key number in bracket
+	//Sound is represented with a number in minute for start of the sound, number in minute for length of the sound, sound type, note, ampritude with 1 as max, and additional numerical variable
+	//Sound effect is effect name and number of variables needed.
+	//New sound can be added by "SOUND" label followd by sound name and sound discription form next line using length, note (in hz), amp for ampritude, and add for additional numerical value, until line with "EOS" is reached
+	//Fluctuating sound effect can be called by F before effect name, then sound definition as a variable in next 1 to 2 lines
+	//For fractuating amplify, 1 in ampritude of imput is x2 amplification
+	//Variable DP is set to number of data points per minute so it can be used for specifying smoothing length easyer
+	//Wave names: sine, square, sawtooth, reverse (reverse swatooth), triangle
+	//Sound effect names: cutoff, smooth, shift, amplify (Fcutoff, Fsmooth, Fshift, Famplify for fructuating)
+
+	uint32_t i;
+	for (i = 1; i < GetNumLines(SrcData); i++){//for each line
+
+	}
 	
 	//Test functions
 	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
@@ -170,14 +192,14 @@ void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampr
 
 void AddData(Sound *dest, Sound *src, uint32_t start){//add src to dest at start
 	uint32_t i;
-	for (i = 0; i <= src->DataSize; i++){//for each of source
+	for (i = 0; i < src->DataSize || i + start < dest->DataSize; i++){//for each of source
 		dest->Sound[i + start] += src->Sound[i];//add data
 	}
 }
 
 void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at start
 	uint32_t i;
-	for (i = 0; i <= src->DataSize; i++){//for each of source
+	for (i = 0; i < src->DataSize || i + start < dest->DataSize; i++){//for each of source
 		dest->Sound[i + start] = src->Sound[i];//copy data
 	}
 }
@@ -396,4 +418,8 @@ void FreeSource(Source *source){//free memory for source
 	}
 	free(source->lines);//free lines array
 	free(source);//free source data
+}
+
+double GetHertz(double key){//get Hz from piano key number for A440
+	return 12 * (log(key / 440) / log(2.0)) + 49;//calculate and return resulting frequency
 }
