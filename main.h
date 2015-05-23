@@ -102,7 +102,8 @@ char *GetLine(Source *source, uint32_t line);//get line of that line number
 uint32_t GetNumLines(Source *source);//get number of lines in the source
 void FreeSource(Source *source);//free memory for source
 double GetHertz(double key);//get Hz from piano key number for A440
-
+Sound *SoundFunction(uint32_t length, char *type, double hz, int32_t ampritude, double num);//run that sound function
+double GetNumber(uint32_t length, char *number, double hz, int32_t ampritude, double num);//get number for that sound function
 
 
 

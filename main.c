@@ -19,37 +19,148 @@ int main(int argc, char *argv[]){
 
 	Dest = fopen(argv[2], "wb");//open destination file
 	if (Dest == NULL){//if file could not be opened
-		printf("Source file %s could not be opened\n", argv[2]);//send error meaaage
+		printf("destination file %s could not be made\n", argv[2]);//send error meaaage
 		exit(EXIT_SUCCESS);//exit program
 	}
 
 	if (GetNumLines(SrcData) <= 0){//if there was no lines in the file
+		printf("Source file was empty\n");//send error message
 		exit(EXIT_SUCCESS);//exit program
 	}
 
 	char line[2048] = { 0 };//line of the file
+	char linecpy[2048] = { 0 };//copy of the line
+	char *first;//first element of line
 	strcpy(line, GetLine(SrcData, 0));//copy line
 
-	MainData = AllocateData((uint32_t)((atof(strtok(line, "/() \t\n")) / atof(strtok(NULL, "/() \t\n"))) * 60.0 * WAV_SAMPLE_PER_SECOND));//allocate memory for main data according to length represented as a fraction
+	MainData = AllocateData((uint32_t)((atof(strtok(line, "/() \t\n\r")) / atof(strtok(NULL, "/() \t\n\r"))) * 60.0 * WAV_SAMPLE_PER_SECOND) + 1);//allocate memory for main data according to length represented as a fraction
 	//All number is represented in a fraction of decimal in parentheses (ex. (1/0.5) is 2)
 	//Start of file has number in minuts of the length of the end result
 	//note is represented by normal number for hertz or key number in bracket
 	//Sound is represented with a number in minute for start of the sound, number in minute for length of the sound, sound type, note, ampritude with 1 as max, and additional numerical variable
 	//Sound effect is effect name and number of variables needed.
-	//New sound can be added by "SOUND" label followd by sound name and sound discription form next line using length, note (in hz), amp for ampritude, and add for additional numerical value, until line with "EOS" is reached
 	//Fluctuating sound effect can be called by F before effect name, then sound definition as a variable in next 1 to 2 lines
 	//For fractuating amplify, 1 in ampritude of imput is x2 amplification
-	//Variable DP is set to number of data points per minute so it can be used for specifying smoothing length easyer
 	//Wave names: sine, square, sawtooth, reverse (reverse swatooth), triangle
-	//Sound effect names: cutoff, smooth, shift, amplify (Fcutoff, Fsmooth, Fshift, Famplify for fructuating)
-
+	//Sound effect names: cutoff, smooth, shift, amplify (Fcutoff, Fsmooth, Famplify for fructuating)
 	uint32_t i;
-	for (i = 1; i < GetNumLines(SrcData); i++){//for each line
-
+	for (i = 1; i < GetNumLines(SrcData) - 1; i++){//for each line
+		strcpy(linecpy, GetLine(SrcData, i));//get next line
+		first = strtok(linecpy, ",. \t\n\r");//get first element of the line
+		strcpy(line, GetLine(SrcData, i));//get this line
+		if (strcmp(first, "cutoff") == 0){//if it was cutoff function
+			Cutoff(MainData, ((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * INT32_MAX), ((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * INT32_MAX));//do cutoff
+		}
+		else if (strcmp(first, "smooth") == 0){//if it was smooth function
+			Smooth(MainData, (int32_t)(atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))), (int32_t)(atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))));//do smooth
+		}
+		else if (strcmp(first, "shift") == 0){//if it was shift function
+			YShift(MainData, (int32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * INT32_MAX));//do yshift
+		}
+		else if (strcmp(first, "amplify") == 0){//if it was amplify function
+			Amplify(MainData, (atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))));//do amplify
+		}
+		else if (strcmp(first, "Fcutoff") == 0){//if it was cutoff function
+			Sound *valA, *valB;//variables
+			//get sound data for 2 variables
+			i++;//next line
+			strcpy(line, GetLine(SrcData, i));//get next line
+			uint32_t start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			uint32_t length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			valA = AllocateData(length + 1);//allocate data
+			strcpy(first, strtok(NULL, "/() \t\n\r.,"));//get next element of the line for function type
+			char *note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			double hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/() \t\n\r.,")));//get the tone
+			int32_t ampritude = ((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * INT32_MAX);//get ampritude
+			double num = (atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,")));//get extra variable
+			AddData(valA, SoundFunction(length, first, hz, ampritude, num), start);//run and add sound function
+			i++;//next line
+			strcpy(line, GetLine(SrcData, i));//get next line
+			start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			valB = AllocateData(length + 1);//allocate data
+			first = strtok(NULL, "/() \t\n\r.,");//get next element of the line for function type
+			note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get the tone
+			ampritude = (int32_t)((atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) * INT32_MAX);//get ampritude
+			num = (atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get extra variable
+			AddData(valB, SoundFunction(length, first, hz, ampritude, num), start);//run and add sound function
+			FluctuatingCutoff(MainData, valA, valB);//do cutoff
+			FreeData(valA);//free sounds
+			FreeData(valB);
+		}
+		else if (strcmp(first, "Fsmooth") == 0){//if it was smooth function
+			Sound *valA, *valB;//variables
+			//get sound data for 2 variables
+			i++;//next line
+			strcpy(line, GetLine(SrcData, i));//get next line
+			uint32_t start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			uint32_t length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			valA = AllocateData(length + 1);//allocate data
+			first = strtok(NULL, "/() \t\n\r.,");//get next element of the line for function type
+			char *note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			double hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/() \t\n\r.,")));//get the tone
+			int32_t ampritude = ((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * INT32_MAX);//get ampritude
+			double num = (atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,")));//get extra variable
+			AddData(valA, SoundFunction(length, first, hz, ampritude, num), start);//run and add sound function
+			i++;//next line
+			strcpy(line, GetLine(SrcData, i));//get next line
+			start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			valB = AllocateData(length + 1);//allocate data
+			first = strtok(NULL, "/() \t\n\r.,");//get next element of the line for function type
+			note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get the tone
+			ampritude = (int32_t)((atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) * INT32_MAX);//get ampritude
+			num = (atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get extra variable
+			AddData(valB, SoundFunction(length, first, hz, ampritude, num), start);//run and add sound function
+			FluctuatingSmooth(MainData, valA, valB);//do smooth
+			FreeData(valA);//free sounds
+			FreeData(valB);
+		}
+		else if (strcmp(first, "Famplify") == 0){//if it was amplify function
+			Sound *valA;//variables
+			//get sound data for 2 variables
+			i++;//next line
+			strcpy(line, GetLine(SrcData, i));//get next line
+			uint32_t start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			uint32_t length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			valA = AllocateData(length + 1);//allocate data
+			first = strtok(NULL, "/() \t\n\r.,");//get next element of the line for function type
+			char *note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			double hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get the tone
+			int32_t ampritude = ((atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) * INT32_MAX);//get ampritude
+			double num = (atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get extra variable
+			AddData(valA, SoundFunction(length, first, hz, ampritude, num), start);//run and add sound function
+			FluctuatingAmplify(MainData, valA);//do amplify
+			FreeData(valA);//free sounds
+		}
+		else if (first[0] == '('){//if it is a sound function
+			uint32_t start = (uint32_t)((atof(strtok(line, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get starting point
+			uint32_t length = (uint32_t)((atof(strtok(NULL, "/() \t\n\r.,")) / atof(strtok(NULL, "/() \t\n\r.,"))) * 60.0 * WAV_SAMPLE_PER_SECOND);//get length of sound
+			first = strtok(NULL, "/() \t\n\r.,");//get next element of the line for function type
+			char *note = strtok(NULL, "/() \t\n\r.,");//get next element of the line for note
+			double hz = note[0] == '[' ? GetHertz(atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) : (atof(note) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get the tone
+			int32_t ampritude = ((atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,"))) * INT32_MAX);//get ampritude
+			double num = (atof(strtok(NULL, "/()[] \t\n\r.,")) / atof(strtok(NULL, "/()[] \t\n\r.,")));//get extra variable
+			Sound *Function = SoundFunction(length, first, hz, ampritude, num);//run sound function
+			AddData(MainData, Function, start);//add sound function
+			FreeData(Function);
+		}
+		else if (strcmp(first, "SOUND") == 0){//if it was a function
+			do{//loop until end of function
+				strcpy(line, GetLine(SrcData, i));//get next line
+				i++;
+				first = strtok(line, " \t\n\r");//get first element of the line
+			} while (strcmp(first, "EOS") != 0);
+		}
+		else{//if there was nothing
+			printf("Empty line at line %lu\n", i);//print that there was an empty line
+		}
 	}
 	
 	//Test functions
-	SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
+	/*SineWave(MainData, 0, WAV_SAMPLE_PER_SECOND, 200, INT32_MAX * 0.9, 0, 0);//add sign wave to main data
 	SquareWave(MainData, WAV_SAMPLE_PER_SECOND, WAV_SAMPLE_PER_SECOND * 2, 200, INT32_MAX * 0.9, 0, 0);//add square wave to main data
 	SawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 2, WAV_SAMPLE_PER_SECOND * 3, 200, INT32_MAX * 0.9, 0, 0);//add swatooth wave to main data
 	ReverseSawtoothWave(MainData, WAV_SAMPLE_PER_SECOND * 3, WAV_SAMPLE_PER_SECOND * 4, 200, INT32_MAX * 0.9, 0, 0);//add reverse-sawtooth wave to main data
@@ -67,7 +178,7 @@ int main(int argc, char *argv[]){
 	Sound *hz = AllocateData(1);//hz for sound
 	YShift(hz, 800 * 1000);//set it to 90% of max 
 	FluctuatingSineWave(MainData, WAV_SAMPLE_PER_SECOND * 5, WAV_SAMPLE_PER_SECOND * 6, hz, sawtooth, blank, yshift);//add sign wave to main data
-
+	*/
 	//write sound file
 	if (WriteWav(Dest, MainData)){//if there was some error
 		printf("Could not write to file correctly\n");//send error message
@@ -192,14 +303,14 @@ void SineWave(Sound *data, uint32_t start, uint32_t end, double hz, int32_t ampr
 
 void AddData(Sound *dest, Sound *src, uint32_t start){//add src to dest at start
 	uint32_t i;
-	for (i = 0; i < src->DataSize || i + start < dest->DataSize; i++){//for each of source
+	for (i = 0; i < src->DataSize && i + start < dest->DataSize; i++){//for each of source
 		dest->Sound[i + start] += src->Sound[i];//add data
 	}
 }
 
 void CopyData(Sound *dest, Sound *src, uint32_t start){//copy src to dest at start
 	uint32_t i;
-	for (i = 0; i < src->DataSize || i + start < dest->DataSize; i++){//for each of source
+	for (i = 0; i < src->DataSize && i + start < dest->DataSize; i++){//for each of source
 		dest->Sound[i + start] = src->Sound[i];//copy data
 	}
 }
@@ -408,6 +519,7 @@ uint32_t GetNumLines(Source *source){//get number of lines in the source
 }
 
 void exit_failure(void){//exit program
+	printf("Big Error \n");//send error message
 	exit(EXIT_FAILURE);//exit program
 }
 
@@ -421,5 +533,29 @@ void FreeSource(Source *source){//free memory for source
 }
 
 double GetHertz(double key){//get Hz from piano key number for A440
-	return 12 * (log(key / 440) / log(2.0)) + 49;//calculate and return resulting frequency
+	return pow(2, (key - 49) / 12) * 440;//calculate and return resulting frequency
 }
+
+Sound *SoundFunction(uint32_t length, char *type, double hz, int32_t ampritude, double num){//run that sound function
+	Sound* MainSound = AllocateData(length + 1);//allocate data for function result
+	if (strcmp(type, "sine") == 0){//if sine wave function
+		SineWave(MainSound, 0, length, hz, ampritude, 0, 0);//get sine wave
+	}
+	else if (strcmp(type, "square") == 0){//if square wave function
+		SquareWave(MainSound, 0, length, hz, ampritude, 0, 0);//get square wave
+	}
+	else if (strcmp(type, "sawtooth") == 0){//if sawtooth wave function
+		SawtoothWave(MainSound, 0, length, hz, ampritude, 0, 0);//get sawtooth wave
+	}
+	else if (strcmp(type, "reverse") == 0){//if reverse sawtooth wave function
+		ReverseSawtoothWave(MainSound, 0, length, hz, ampritude, 0, 0);//get reverse sawtooth wave
+	}
+	else if (strcmp(type, "triangle") == 0){//if triangle wave function
+		TriangleWave(MainSound, 0, length, hz, ampritude, 0, 0);//get triangle wave
+	}
+	else if (strcmp(type, "GlottalFlow") == 0){//if triangle wave function
+		GlottalFlowWave(MainSound, hz, ampritude, num, 0);//get glottal flow wave
+	}
+	return MainSound;//return result
+}
+
